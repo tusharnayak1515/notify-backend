@@ -5,8 +5,12 @@ const cors = require("cors");
 const connectToMongo = require('./db');
 
 const app = express();
+app.use(express.json());
 connectToMongo();
-const port = 3001;
+const port = 5000;
+
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/todos', require('./routes/todo'));
 
 app.get("/",(req,res)=> {
     res.json("Hello");
