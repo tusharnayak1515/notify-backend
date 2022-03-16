@@ -45,6 +45,7 @@ router.post('/addtodo', [
         const todo = new Todo({
             text: req.body.text,
             date: date1,
+            isComplete: req.body.isComplete,
             user: req.user.id
         });
 
@@ -95,11 +96,6 @@ router.delete('/deletetodo/:id', fetchUser, async (req, res) => {
 // ROUTE 4: Edit todo using PUT. Login required
 router.put('/edittodo/:id', fetchUser, async (req, res) => {
     let success = false;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        success = false;
-        return res.json({ success, errors: errors.array(), status: 400 })
-    }
     try {
         const {text,date} = req.body;
         let todo = await Todo.findById(req.params.id);
@@ -109,7 +105,7 @@ router.put('/edittodo/:id', fetchUser, async (req, res) => {
             return res.json({success,error: "Todo not found",status: 404})
         }
 
-        let newTodo = {text: todo.text, date: todo.date};
+        let newTodo = {text: todo.text, date: todo.date, isComplete: todo.isComplete};
         if(text) {
             newTodo.text = text;
         }
@@ -123,9 +119,38 @@ router.put('/edittodo/:id', fetchUser, async (req, res) => {
             return res.json({success, error: "This is not allowed", status: 401})
         }
 
-        post = await Todo.findByIdAndUpdate(req.params.id, {$set: newTodo}, {new: true})
+        todo = await Todo.findByIdAndUpdate(req.params.id, {$set: newTodo}, {new: true});
+        const updatedTodos = await Todo.find({user: req.user.id});
         success = true;
-        res.json({success, post, status: 200}); 
+        res.json({success, updatedTodos, status: 200}); 
+    }
+    catch (error) {
+        res.send({ error: "Internal Server Error", status: 500 });
+    }
+});
+
+// ROUTE 4: Complete todo using PUT. Login required
+router.put('/complete/:id', fetchUser, async (req, res) => {
+    let success = false;
+    try {
+        let todo = await Todo.findById(req.params.id);
+
+        if(!todo) {
+            success = false;
+            return res.json({success,error: "Todo not found",status: 404})
+        }
+
+        let newTodo = {text: todo.text, date: todo.date, isComplete: !todo.isComplete};
+
+        if(todo.user.toString() !== req.user.id) {
+            success = false;
+            return res.json({success, error: "This is not allowed", status: 401})
+        }
+
+        todo = await Todo.findByIdAndUpdate(req.params.id, {$set: newTodo}, {new: true});
+        const updatedTodos = await Todo.find({user: req.user.id});
+        success = true;
+        res.json({success, updatedTodos, status: 200}); 
     }
     catch (error) {
         res.send({ error: "Internal Server Error", status: 500 });

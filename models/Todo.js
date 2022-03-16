@@ -10,6 +10,10 @@ const TodoSchema = new Schema({
         type: String,
         default: Date.now
     },
+    isComplete: {
+        type: Boolean,
+        default: false
+    },
     user: {
         type: Schema.Types.ObjectId,
         ref: 'user'
