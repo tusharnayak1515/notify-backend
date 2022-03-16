@@ -118,11 +118,6 @@ router.put('/edittodo/:id', fetchUser, async (req, res) => {
             newTodo.date = date;
         }
 
-        if(!todo) {
-            success = false;
-            return res.json({success, error: "Not Found", status: 404});
-        }
-
         if(todo.user.toString() !== req.user.id) {
             success = false;
             return res.json({success, error: "This is not allowed", status: 401})
