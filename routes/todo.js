@@ -10,9 +10,9 @@ const router = express.Router();
 router.get('/fetchAlltodos', fetchUser, async (req, res) => {
     let success = false;
     try {
-        const posts = await Todo.find({ user: req.user.id });
+        const todos = await Todo.find({ user: req.user.id });
         success = true;
-        return res.json({ success, posts, status: 200 });
+        return res.json({ success, todos, status: 200 });
     }
     catch (error) {
         res.send({ error: "Internal Server Error", status: 500 });
@@ -80,7 +80,8 @@ router.delete('/deletetodo/:id', fetchUser, async (req, res) => {
             return res.json({success, error: "This is not allowed", status: 401})
         }
 
-        const filteredTodos = await Todo.findByIdAndDelete(req.params.id);
+        const deletedTodo = await Todo.findByIdAndDelete(req.params.id);
+        const filteredTodos = await Todo.find({user: req.user.id});
         const myuser = await User.findByIdAndUpdate({_id:req.user.id},{$pull: {todos: req.params.id}})
 
         success = true;
@@ -108,7 +109,7 @@ router.put('/edittodo/:id', fetchUser, async (req, res) => {
             return res.json({success,error: "Todo not found",status: 404})
         }
 
-        let newTodo = {text: "", date: todo.date};
+        let newTodo = {text: todo.text, date: todo.date};
         if(text) {
             newTodo.text = text;
         }
