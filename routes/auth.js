@@ -21,7 +21,7 @@ router.post('/register', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         success = false;
-        return res.json({ success, errors: errors.array(), status: 400 })
+        return res.json({ success, error: errors.array()[0].msg, status: 400 })
     }
     try {
         let user = await User.findOne({ email: req.body.email });
@@ -68,7 +68,7 @@ router.post('/login', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         success = false;
-        return res.json({ success, errors: errors.array(), status: 400 })
+        return res.json({ success, error: errors.array()[0].msg, status: 400 })
     }
     const { email, password } = req.body;
     try {
@@ -88,8 +88,9 @@ router.post('/login', [
             }
         };
         const authToken = jwt.sign(data,secret);
+        const mytodos = await Todo.find({user: user._id});
         success = true;
-        res.json({success,authToken,status:200})
+        res.json({success,authToken,mytodos,status:200})
     }
     catch (error) {
         res.send({ error: "Internal Server Error", status: 500 });
@@ -97,7 +98,7 @@ router.post('/login', [
 });
 
 // ROUTE 3: Get user details using POST. Login Required
-router.post('/profile', fetchUser , async (req, res) => {
+router.get('/profile', fetchUser , async (req, res) => {
     let success = false;
     try {
         const userId = req.user.id;

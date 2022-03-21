@@ -21,13 +21,15 @@ router.get('/fetchAlltodos', fetchUser, async (req, res) => {
 
 // ROUTE 2: Add todo using POST. Login required
 router.post('/addtodo', [
-    body('text', 'Enter a valid todo').isLength({ min: 5 })
+    body('text', 'Todo cannot be less than 5 characters!').isLength({ min: 5 })
 ], fetchUser, async (req, res) => {
     let success = false;
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
+    const text1 = req.body.text.replace(/ /g,'');
+    console.log(text1.length);
+    if (!errors.isEmpty() || text1.length < 5) {
         success = false;
-        return res.json({ success, errors: errors.array(), status: 400 })
+        return res.json({ success, error: !errors.isEmpty() ? errors.array()[0].msg : 'Todo cannot be less than 5 characters!', status: 400 })
     }
     try {
         const mydate = new Date();
@@ -45,7 +47,7 @@ router.post('/addtodo', [
         const todo = new Todo({
             text: req.body.text,
             date: date1,
-            isComplete: req.body.isComplete,
+            isComplete: false,
             user: req.user.id
         });
 
@@ -63,11 +65,6 @@ router.post('/addtodo', [
 // ROUTE 3: Delete todo using DELETE. Login required
 router.delete('/deletetodo/:id', fetchUser, async (req, res) => {
     let success = false;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        success = false;
-        return res.json({ success, errors: errors.array(), status: 400 })
-    }
     try {
         const targetTodo = await Todo.findOne({_id:req.params.id});
 
@@ -94,8 +91,16 @@ router.delete('/deletetodo/:id', fetchUser, async (req, res) => {
 });
 
 // ROUTE 4: Edit todo using PUT. Login required
-router.put('/edittodo/:id', fetchUser, async (req, res) => {
+router.put('/edittodo/:id',[
+    body('text', 'Todo cannot be less than 5 characters!').isLength({ min: 5 })
+], fetchUser, async (req, res) => {
     let success = false;
+    const errors = validationResult(req);
+    const text1 = req.body.text.replace(/ /g,'');
+    if (!errors.isEmpty() || text1.length < 5) {
+        success = false;
+        return res.json({ success, error: !errors.isEmpty() ? errors.array()[0].msg : 'Todo cannot be less than 5 characters!', status: 400 })
+    }
     try {
         const {text,date} = req.body;
         let todo = await Todo.findById(req.params.id);
@@ -120,9 +125,8 @@ router.put('/edittodo/:id', fetchUser, async (req, res) => {
         }
 
         todo = await Todo.findByIdAndUpdate(req.params.id, {$set: newTodo}, {new: true});
-        const updatedTodos = await Todo.find({user: req.user.id});
         success = true;
-        res.json({success, updatedTodos, status: 200}); 
+        res.json({success, todo, status: 200}); 
     }
     catch (error) {
         res.send({ error: "Internal Server Error", status: 500 });
