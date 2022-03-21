@@ -26,7 +26,6 @@ router.post('/addtodo', [
     let success = false;
     const errors = validationResult(req);
     const text1 = req.body.text.replace(/ /g,'');
-    console.log(text1.length);
     if (!errors.isEmpty() || text1.length < 5) {
         success = false;
         return res.json({ success, error: !errors.isEmpty() ? errors.array()[0].msg : 'Todo cannot be less than 5 characters!', status: 400 })
