@@ -90,7 +90,7 @@ router.post('/login', [
         const authToken = jwt.sign(data,secret);
         const mytodos = await Todo.find({user: user._id});
         success = true;
-        res.json({success,authToken,mytodos,status:200})
+        res.json({success,authToken,user,mytodos,status:200})
     }
     catch (error) {
         res.send({ error: "Internal Server Error", status: 500 });
